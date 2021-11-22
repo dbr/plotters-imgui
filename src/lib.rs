@@ -20,16 +20,21 @@ impl Display for ImguiError {
 pub struct ImguiBackend<'a> {
     ui: &'a Ui,
     draw_list: &'a DrawListMut<'a>,
+    origin: (f32, f32),
     size: (u32, u32),
 }
 
 impl<'a> ImguiBackend<'a> {
-    pub fn new(ui: &'a Ui, draw_list: &'a DrawListMut, size: (u32, u32)) -> Self {
+    pub fn new(ui: &'a Ui, draw_list: &'a DrawListMut, origin: (f32, f32), size: (u32, u32)) -> Self {
         Self {
             ui,
             draw_list,
+            origin,
             size,
         }
+    }
+    fn imgui_point(&self, point: BackendCoord) -> [f32; 2] {
+        [self.origin.0 + (point.0 as f32), self.origin.1 + point.1 as f32]
     }
 }
 
@@ -40,10 +45,6 @@ fn imgui_color(color: BackendColor) -> [f32; 4] {
         f32::from(color.rgb.2) / 255.0,
         color.alpha as f32,
     ]
-}
-
-fn imgui_point(point: BackendCoord) -> [f32; 2] {
-    [point.0 as f32, point.1 as f32]
 }
 
 impl<'a> DrawingBackend for ImguiBackend<'a> {
@@ -66,7 +67,7 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         point: BackendCoord,
         color: BackendColor,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
-        let p = imgui_point(point);
+        let p = self.imgui_point(point);
         self.draw_list
             .add_rect(p, [p[0] + 1.0, p[1] + 1.0], imgui_color(color))
             .build();
@@ -81,8 +82,8 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         self.draw_list
             .add_line(
-                imgui_point(from),
-                imgui_point(to),
+                self.imgui_point(from),
+                self.imgui_point(to),
                 imgui_color(style.color()),
             )
             .thickness(style.stroke_width() as f32)
@@ -99,8 +100,8 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         self.draw_list
             .add_rect(
-                imgui_point(upper_left),
-                imgui_point(bottom_right),
+                self.imgui_point(upper_left),
+                self.imgui_point(bottom_right),
                 imgui_color(style.color()),
             )
             .thickness(style.stroke_width() as f32)
@@ -170,10 +171,11 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         radius: u32,
         style: &S,
         fill: bool,
+
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
         self.draw_list
             .add_circle(
-                imgui_point(center),
+                self.imgui_point(center),
                 radius as f32,
                 imgui_color(style.color()),
             )
@@ -188,7 +190,7 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         text: &str,
         _font: &S,
     ) -> Result<(u32, u32), DrawingErrorKind<Self::ErrorType>> {
-        let extents = self.ui.calc_text_size(&im_str!("{}", text));
+        let extents = self.ui.calc_text_size(text);
         Ok((extents[0].round() as u32, extents[1].round() as u32))
     }
 
@@ -198,10 +200,9 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         style: &S,
         pos: BackendCoord,
     ) -> Result<(), DrawingErrorKind<Self::ErrorType>> {
-        let str = im_str!("{}", text);
-        let p = imgui_point(pos);
+        let p = self.imgui_point(pos);
 
-        let extents = self.ui.calc_text_size(&str);
+        let extents = self.ui.calc_text_size(text);
         let dx = match style.anchor().h_pos {
             HPos::Left => 0.0,
             HPos::Right => -extents[0],
@@ -214,7 +215,7 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         };
 
         self.draw_list
-            .add_text([p[0] + dx, p[1] + dy], imgui_color(style.color()), str);
+            .add_text([p[0] + dx, p[1] + dy], imgui_color(style.color()), text);
         Ok(())
     }
 }
