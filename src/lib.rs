@@ -1,5 +1,5 @@
 use earcutr::earcut;
-use imgui::{im_str, Ui, WindowDrawList};
+use imgui::{im_str, Ui, DrawListMut};
 use plotters_backend::{
     text_anchor::{HPos, VPos},
     BackendColor, BackendCoord, BackendStyle, BackendTextStyle, DrawingBackend, DrawingErrorKind,
@@ -19,12 +19,12 @@ impl Display for ImguiError {
 
 pub struct ImguiBackend<'a> {
     ui: &'a Ui<'a>,
-    draw_list: &'a WindowDrawList<'a>,
+    draw_list: &'a DrawListMut<'a>,
     size: (u32, u32),
 }
 
 impl<'a> ImguiBackend<'a> {
-    pub fn new(ui: &'a Ui, draw_list: &'a WindowDrawList, size: (u32, u32)) -> Self {
+    pub fn new(ui: &'a Ui, draw_list: &'a DrawListMut, size: (u32, u32)) -> Self {
         Self {
             ui,
             draw_list,
@@ -188,7 +188,7 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         text: &str,
         _font: &S,
     ) -> Result<(u32, u32), DrawingErrorKind<Self::ErrorType>> {
-        let extents = self.ui.calc_text_size(&im_str!("{}", text), false, f32::MAX);
+        let extents = self.ui.calc_text_size(&im_str!("{}", text));
         Ok((extents[0].round() as u32, extents[1].round() as u32))
     }
 
@@ -201,7 +201,7 @@ impl<'a> DrawingBackend for ImguiBackend<'a> {
         let str = im_str!("{}", text);
         let p = imgui_point(pos);
 
-        let extents = self.ui.calc_text_size(&str, false, f32::MAX);
+        let extents = self.ui.calc_text_size(&str);
         let dx = match style.anchor().h_pos {
             HPos::Left => 0.0,
             HPos::Right => -extents[0],

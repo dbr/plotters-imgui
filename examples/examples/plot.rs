@@ -13,14 +13,13 @@ fn main() {
     let mut shift: f64 = 0.0;
 
     system.main_loop(move |_, ui| {
-        Window::new(im_str!("Hello Plotters"))
+        Window::new("Hello Plotters")
             .position([270.0, 50.0], Condition::FirstUseEver)
             .size([200.0, 100.0], Condition::FirstUseEver)
             .build(ui, || {
-                ui.text(im_str!("Shift wave by sliding here:"));
+                ui.text("Shift wave by sliding here:");
 
-                Slider::new(im_str!("Shift"))
-                    .range(0.0..=2.0)
+                Slider::new("Shift", 0.0, 2.0)
                     .display_format(im_str!("%.2f"))
                     .build(ui, &mut shift);
 

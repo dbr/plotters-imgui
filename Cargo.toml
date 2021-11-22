@@ -6,5 +6,5 @@ edition = "2018"
 
 [dependencies]
 plotters-backend = "^0.3.*"
-imgui = "0.5"
-earcutr = { git = "https://github.com/dabreegster/earcutr", branch = "patch-1" }
+imgui = "0.8"
+earcutr = { git = "https://github.com/donbright/earcutr", rev = "aaa18bfdfe581db26bb9869aec170329b4e14f4c" }
